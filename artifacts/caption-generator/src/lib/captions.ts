@@ -1,5 +1,5 @@
 export type Platform = "Instagram" | "Facebook" | "Twitter" | "LinkedIn";
-export type Tone = "Inspiring" | "Conversational" | "Devotional" | "Bold" | "Gentle";
+export type Tone = "Liturgical" | "Reflective" | "Communal" | "Proclamatory" | "Prayerful";
 
 export const PLATFORM_LIMITS: Record<Platform, number> = {
   Instagram: 2200,
@@ -8,16 +8,50 @@ export const PLATFORM_LIMITS: Record<Platform, number> = {
   LinkedIn: 3000,
 };
 
-const HASHTAG_BANK = [
-  "#ChurchLife", "#Faith", "#SundayService", "#WordOfGod", "#GodIsGood",
-  "#ChristianLiving", "#Ministry", "#Worship", "#Scripture", "#Community",
-  "#Hope", "#Grace", "#Jesus", "#BibleStudy", "#SpiritualGrowth",
-  "#Encouragement", "#PrayWithoutCeasing", "#LoveGodLovePeople", "#FaithJourney"
+export const TONE_DESCRIPTIONS: Record<Tone, string> = {
+  Liturgical: "Formal, rooted in the Divine Liturgy and Ge'ez tradition",
+  Reflective: "Contemplative, patristic, drawing on the Holy Fathers",
+  Communal: "Warm, gathered-people focus — announcements and fellowship",
+  Proclamatory: "Confident Orthodox proclamation, solemn and clear",
+  Prayerful: "Intercession, fasting, and the life of prayer",
+};
+
+const HASHTAG_BASE = [
+  "#EthiopianOrthodox",
+  "#SPOTChurch",
+  "#TempleHills",
+  "#Tewahedo",
+  "#OrthodoxChristian",
+  "#HolyTewahedo",
+  "#EthiopianOrthodoxTewahedo",
 ];
 
-function getRandomHashtags(count: number): string {
-  const shuffled = [...HASHTAG_BANK].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count).join(" ");
+const HASHTAG_EXTENDED = [
+  "#OrthodoxFaith",
+  "#DiasporaFaith",
+  "#Habesha",
+  "#GeezLiturgy",
+  "#SundayLiturgy",
+  "#FeastDay",
+  "#HolyFathers",
+  "#OrthodoxyInAmerica",
+  "#ChristianCommunity",
+  "#OrthodoxLife",
+  "#TempleHillsMaryland",
+  "#FaithAndFamily",
+  "#OrthodoxWorship",
+  "#AncientFaith",
+  "#ChurchOfEthiopia",
+  "#LiturgicalLife",
+  "#SaintsOfTheTewahedo",
+  "#OrthodoxPrayer",
+];
+
+function getHashtags(count: number): string {
+  const base = [...HASHTAG_BASE];
+  const extended = [...HASHTAG_EXTENDED].sort(() => 0.5 - Math.random());
+  const combined = [...base, ...extended].slice(0, count);
+  return combined.join(" ");
 }
 
 function truncateToPlatform(text: string, platform: Platform): string {
@@ -27,7 +61,6 @@ function truncateToPlatform(text: string, platform: Platform): string {
 }
 
 function extractScripture(input: string): string | null {
-  // Very basic scripture detection (e.g., John 3:16)
   const regex = /\b(?:[1-3]\s)?[A-Za-z]+\s\d{1,3}:\d{1,3}\b/i;
   const match = input.match(regex);
   return match ? match[0] : null;
@@ -36,55 +69,55 @@ function extractScripture(input: string): string | null {
 export function generateCaptions(topic: string, platform: Platform, tone: Tone): string[] {
   const scripture = extractScripture(topic);
   const baseTopic = topic.trim();
-  
-  const generateOne = (variation: number) => {
+
+  const generateOne = (variation: number): string => {
     let text = "";
-    
-    if (tone === "Inspiring") {
+
+    if (tone === "Liturgical") {
       if (variation === 1) {
-        text = `Lift up your hearts! ${baseTopic}. May you be encouraged and strengthened today as we lean into His truth.\n\n${scripture ? `As we read in ${scripture}, there is always hope to be found. ` : ''}Let's walk this journey together.\n\n${getRandomHashtags(5)}`;
+        text = `Glory be to God in the highest. This Sunday at SPOT Church, we gather in the ancient tradition of our fathers to receive the Holy Mysteries and lift our hearts before the Lord.\n\n${baseTopic}.\n\n${scripture ? `The Church has always held fast to this word: ${scripture}. ` : ""}Come and stand with us in the faith of the Tewahedo.\n\n${getHashtags(7)}`;
       } else if (variation === 2) {
-        text = `A gentle reminder for your day: ${baseTopic}. God is working in ways we cannot always see, but we can always trust His heart.\n\nHave a blessed week ahead!\n\n${getRandomHashtags(6)}`;
+        text = `The Divine Liturgy is not a ceremony — it is heaven on earth. We gather as the Body of Christ, rooted in the Ge'ez liturgical tradition of the Ethiopian Orthodox Tewahedo Church, to offer our praise and receive grace.\n\n${baseTopic}.\n\nJoin us at SPOT Church, Temple Hills, Maryland.\n\n${getHashtags(8)}`;
       } else {
-        text = `Today's focus: ${baseTopic}.\n\nWhen we align our perspective with His promises, everything changes. ${scripture ? `Take a moment to reflect on ${scripture} today.` : ''}\n\nJoin us as we dive deeper into this truth!\n\n${getRandomHashtags(5)}`;
+        text = `In the words of the ancient anaphora, we cry out: Holy, Holy, Holy.\n\n${baseTopic}.\n\n${scripture ? `"${scripture}" — as proclaimed in the Sacred Scriptures received and cherished by the Tewahedo Church. ` : ""}We remain steadfast in the faith once delivered to the saints.\n\n${getHashtags(7)}`;
       }
-    } else if (tone === "Conversational") {
+    } else if (tone === "Reflective") {
       if (variation === 1) {
-        text = `Hey church family! Just wanted to share a quick thought on ${baseTopic}. Sometimes we just need a moment to pause and reflect on what really matters.\n\nHow is this showing up in your life right now? Drop a comment below!\n\n${getRandomHashtags(4)}`;
+        text = `The Holy Fathers teach us that the spiritual life is a lifelong pilgrimage — never complete, always deepening.\n\n${baseTopic}.\n\n${scripture ? `Let us sit with the word of ${scripture} and allow it to form us from the inside out. ` : ""}May we grow in humility, fasting, and prayer as the tradition of our Church calls us.\n\n${getHashtags(7)}`;
       } else if (variation === 2) {
-        text = `We were just talking about ${baseTopic} the other day. It is amazing how relevant this is for the season we are in. ${scripture ? `Have you read ${scripture} lately? Highly recommend.` : ''}\n\nHope everyone is having a great week so far.\n\n${getRandomHashtags(5)}`;
+        text = `Pause. Return to the center.\n\n${baseTopic}.\n\nThe Ethiopian Orthodox Tewahedo Church has preserved an unbroken stream of patristic wisdom for over sixteen centuries. In that tradition we find not rules, but a way of life — a path of repentance and renewal.\n\n${scripture ? `Reflect on ${scripture} today. ` : ""}${getHashtags(6)}`;
       } else {
-        text = `Checking in with you all! We are diving into ${baseTopic} and it has been so good. If you missed Sunday, you definitely want to catch up.\n\nWhat is your biggest takeaway on this topic?\n\n${getRandomHashtags(5)}`;
+        text = `There is a quietness in the Orthodox life that the world does not understand — a stillness that comes not from the absence of struggle, but from the presence of God.\n\n${baseTopic}.\n\n${scripture ? `${scripture} speaks to this. ` : ""}May your heart be still and know.\n\n${getHashtags(6)}`;
       }
-    } else if (tone === "Devotional") {
+    } else if (tone === "Communal") {
       if (variation === 1) {
-        text = `Take a deep breath and center your heart on ${baseTopic}.\n\nIn the quiet moments, His voice is clearest. Let this truth anchor your soul today.\n\n${scripture ? `Reflect: ${scripture}\n\n` : ''}${getRandomHashtags(4)}`;
+        text = `Dear SPOT Church family — we are glad you are here.\n\n${baseTopic}.\n\nWhether you are a long-time member of our community or joining us for the first time, there is a place for you among us. We gather as one body, one faith, one baptism.\n\nTemple Hills, Maryland — come as you are.\n\n${getHashtags(7)}`;
       } else if (variation === 2) {
-        text = `A moment of reflection: ${baseTopic}.\n\nMay we be a people who constantly seek His face and rest in His enduring grace. Peace be with you today.\n\n${getRandomHashtags(5)}`;
+        text = `Community is not optional in the life of faith — it is essential. The Tewahedo tradition has always understood the Church as a family, not just an institution.\n\n${baseTopic}.\n\nWe are SPOT Church. We are your community in Temple Hills, Maryland. We welcome you.\n\n${getHashtags(7)}`;
       } else {
-        text = `Lord, we bring before You our thoughts on ${baseTopic}. Guide our steps and renew our minds.\n\nMay your day be filled with quiet assurance of His presence.\n\n${getRandomHashtags(5)}`;
+        text = `A reminder for our community: ${baseTopic}.\n\nOur doors are open. Our table is prepared. The people of SPOT Church walk this road together — across generations, across languages, in the unity of the ancient faith.\n\n${getHashtags(6)}`;
       }
-    } else if (tone === "Bold") {
+    } else if (tone === "Proclamatory") {
       if (variation === 1) {
-        text = `It is time to step up! ${baseTopic}. We are not called to live in fear, but in power and love. ${scripture ? `Read ${scripture} and let it sink in.` : ''}\n\nLet's get out there and be the church!\n\n${getRandomHashtags(6)}`;
+        text = `The Ethiopian Orthodox Tewahedo Church does not merely speak of the Resurrection — she lives from it.\n\n${baseTopic}.\n\n${scripture ? `"${scripture}" — this is not a suggestion. It is the testimony of the Scriptures, received and guarded by the Holy Church. ` : ""}We proclaim it without apology.\n\n${getHashtags(8)}`;
       } else if (variation === 2) {
-        text = `Do not miss this truth: ${baseTopic}. The world needs what God has placed inside of you. Stand firm, stay grounded, and keep moving forward.\n\n${getRandomHashtags(5)}`;
+        text = `The faith of the Tewahedo is ancient, tested, and unyielding.\n\n${baseTopic}.\n\nFor over sixteen hundred years, the Ethiopian Orthodox Church has maintained the deposit of faith — through kingdoms, through exile, through trial. That same faith is alive and present at SPOT Church in Temple Hills today.\n\n${getHashtags(7)}`;
       } else {
-        text = `The message is clear: ${baseTopic}.\n\nNo more holding back. Let's embrace the calling on our lives with everything we have today.\n\n${getRandomHashtags(5)}`;
+        text = `We do not diminish the Gospel to make it palatable. We receive it as the Holy Fathers handed it down — full, undivided, and life-giving.\n\n${baseTopic}.\n\n${scripture ? `${scripture}. This is the word of the Lord. ` : ""}Stand firm in what you have received.\n\n${getHashtags(7)}`;
       }
     } else {
-      // Gentle
+      // Prayerful
       if (variation === 1) {
-        text = `Sending a little extra grace your way today as we think about ${baseTopic}. It is okay to take things one step at a time. He is with you.\n\n${scripture ? `Rest in ${scripture}. ` : ''}\n\n${getRandomHashtags(4)}`;
+        text = `Lord, have mercy. Lord, have mercy. Lord, have mercy.\n\n${baseTopic}.\n\nIn this season, may the SPOT Church community be a people of earnest prayer — holding one another before the throne of grace, fasting with sincerity, seeking the face of God with all that we are.\n\n${scripture ? `We rest on ${scripture}. ` : ""}${getHashtags(6)}`;
       } else if (variation === 2) {
-        text = `If your heart feels heavy, remember this: ${baseTopic}. You are deeply loved and known by the Creator.\n\nBreathe out the worry, breathe in His peace.\n\n${getRandomHashtags(5)}`;
+        text = `The Tewahedo tradition calls us to pray without ceasing — not as a burden, but as a breath.\n\n${baseTopic}.\n\nLet us bring this before God together. The Church prays as one body. Your intercession matters. Your fast is seen.\n\n${getHashtags(7)}`;
       } else {
-        text = `A soft reminder for your spirit: ${baseTopic}. You do not have to have it all together. Just come as you are to the One who holds it all.\n\n${getRandomHashtags(4)}`;
+        text = `A prayer for our community at SPOT Church:\n\nFather of lights, in the midst of ${baseTopic}, we look to You. Guide our steps. Sanctify our homes. Strengthen our elders and protect our children. Unite us in the bond of peace and the love of the Holy Spirit.\n\n${scripture ? `We stand on Your word: ${scripture}.\n\n` : ""}${getHashtags(6)}`;
       }
     }
-    
+
     return truncateToPlatform(text, platform);
   };
-  
+
   return [generateOne(1), generateOne(2), generateOne(3)];
 }

@@ -4,21 +4,36 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { generateCaptions, Platform, Tone, PLATFORM_LIMITS, TONE_DESCRIPTIONS } from "@/lib/captions";
+import { Platform, Tone, PLATFORM_LIMITS, TONE_DESCRIPTIONS } from "@/lib/captions";
 import { getUpcomingFeasts, formatFeastDate } from "@/lib/feasts";
-import { Copy, RefreshCw, Send, BookOpen, CalendarDays, ChevronRight } from "lucide-react";
+import { Copy, RefreshCw, Send, BookOpen, CalendarDays, ChevronRight, Loader2 } from "lucide-react";
 
 const upcomingFeasts = getUpcomingFeasts(7);
+
+async function fetchCaptions(topic: string, platform: Platform, tone: Tone): Promise<string[]> {
+  const res = await fetch(`${import.meta.env.BASE_URL}api/captions/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ topic, platform, tone }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? "Failed to generate captions");
+  }
+  const data = await res.json() as { captions: string[] };
+  return data.captions;
+}
 
 export default function Home() {
   const [topic, setTopic] = useState("");
   const [platform, setPlatform] = useState<Platform>("Instagram");
   const [tone, setTone] = useState<Tone>("Communal");
   const [results, setResults] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedFeastIndex, setSelectedFeastIndex] = useState<number | null>(null);
   const { toast } = useToast();
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!topic.trim()) {
       toast({
         title: "Please enter a topic",
@@ -27,8 +42,19 @@ export default function Home() {
       });
       return;
     }
-    const newCaptions = generateCaptions(topic, platform, tone);
-    setResults(newCaptions);
+    setLoading(true);
+    try {
+      const captions = await fetchCaptions(topic, platform, tone);
+      setResults(captions);
+    } catch (err) {
+      toast({
+        title: "Generation failed",
+        description: err instanceof Error ? err.message : "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFeastSelect = (index: number) => {
@@ -70,13 +96,13 @@ export default function Home() {
             <span className="text-sm font-semibold text-foreground">Upcoming Feast Days</span>
             <span className="ml-auto text-xs text-muted-foreground">Click a feast to pre-fill the topic</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
             {upcomingFeasts.slice(0, 4).map((feast, i) => (
               <button
                 key={feast.name + feast.date}
                 data-testid={`feast-item-${i}`}
                 onClick={() => handleFeastSelect(i)}
-                className={`group flex flex-col gap-1 px-5 py-4 text-left transition-colors hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${selectedFeastIndex === i ? "bg-primary/8 border-l-2 border-primary" : ""}`}
+                className={`group flex flex-col gap-1 px-5 py-4 text-left transition-colors hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${selectedFeastIndex === i ? "bg-primary/5 border-l-2 border-primary" : ""}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-0.5 flex-1">
@@ -100,13 +126,13 @@ export default function Home() {
             ))}
           </div>
           {upcomingFeasts.length > 4 && (
-            <div className="border-t border-border px-5 py-2 bg-muted/20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
+            <div className="border-t border-border px-5 py-2 bg-muted/20 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
               {upcomingFeasts.slice(4, 7).map((feast, i) => (
                 <button
                   key={feast.name + feast.date}
                   data-testid={`feast-item-${i + 4}`}
                   onClick={() => handleFeastSelect(i + 4)}
-                  className={`group flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${selectedFeastIndex === i + 4 ? "bg-primary/8" : ""}`}
+                  className={`group flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${selectedFeastIndex === i + 4 ? "bg-primary/5" : ""}`}
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
@@ -190,11 +216,21 @@ export default function Home() {
 
                 <Button
                   onClick={handleGenerate}
+                  disabled={loading}
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 text-base shadow-sm transition-all"
                   data-testid="button-generate"
                 >
-                  <Send className="mr-2 h-4 w-4" />
-                  Generate Captions
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Generate Captions
+                    </>
+                  )}
                 </Button>
 
               </CardContent>
@@ -202,20 +238,28 @@ export default function Home() {
 
             <div className="rounded-lg border border-border bg-muted/30 px-4 py-4 text-xs text-muted-foreground space-y-1 leading-relaxed">
               <p className="font-semibold text-foreground text-xs">Tips</p>
-              <p>Name a specific feast (Timkat, Meskel, Enkutatash), a liturgical season (Tsome Filseta, Tsome Nenewe), or a Ge'ez scripture passage for the most rooted captions.</p>
+              <p>Name a specific feast (Timkat, Meskel, Enkutatash), a liturgical season (Tsome Filseta, Tsome Nenewe), or a scripture passage for the most rooted captions. The AI will write something unique each time.</p>
             </div>
           </div>
 
           {/* Right: results */}
           <div className="lg:col-span-2 space-y-5">
-            {results.length === 0 ? (
+            {loading ? (
+              <Card className="flex flex-col items-center justify-center p-12 text-center min-h-[420px]">
+                <Loader2 className="h-10 w-10 text-primary animate-spin mb-5" />
+                <h3 className="text-lg font-semibold text-foreground mb-2 font-serif">Writing your captions...</h3>
+                <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+                  Claude is crafting three distinct variations rooted in the Tewahedo tradition.
+                </p>
+              </Card>
+            ) : results.length === 0 ? (
               <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed bg-muted/20 min-h-[420px]">
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-5">
                   <BookOpen className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2 font-serif">Ready to serve your community</h3>
                 <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
-                  Select a feast day above or enter a topic on the left and choose a voice. Your captions will appear here, rooted in the ancient tradition of the Tewahedo Church.
+                  Select a feast day above or enter a topic on the left and choose a voice. The AI will write unique, rooted captions for your community.
                 </p>
               </Card>
             ) : (
@@ -226,6 +270,7 @@ export default function Home() {
                     variant="outline"
                     size="sm"
                     onClick={handleGenerate}
+                    disabled={loading}
                     className="text-primary hover:text-primary border-primary/30 hover:bg-primary/5"
                     data-testid="button-regenerate-top"
                   >
@@ -265,6 +310,7 @@ export default function Home() {
                   <Button
                     variant="outline"
                     onClick={handleGenerate}
+                    disabled={loading}
                     className="border-border hover:bg-muted text-sm"
                     data-testid="button-regenerate-bottom"
                   >
